@@ -1,0 +1,19 @@
+import random
+def guess1To10():
+    number = random.randint(1,10)
+    guess = int(input(" guess a number between 1 and 10 :"))
+    guessesAmount = 1
+    while guess != number:
+        print("wrong guess, try again!")
+        if(guess < number):
+            print("too low")
+        elif(guess > number):
+            print("too high")
+        guessesAmount+=1
+        guess = int(input("guess again"))
+    print(" congratz you were right! it took you " + str(guessesAmount) + " tries to get it right")
+guess1To10()
+# if guess == number :
+#     print("congratulations ! you have guessed the number correctly!")
+# else: 
+#     print("sorry, you have guessed the number incorrectly, the number was " + str(number))
