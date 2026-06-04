@@ -1,0 +1,89 @@
+import requests 
+import pandas as pd
+import matplotlib.pyplot as plt
+API_KEY = "d53fcdf1fafa476f9e3d37a12e8a4a15"
+Base_URL = "https://api.football-data.org/v4/"
+
+headers = {"X-Auth-Token": API_KEY}
+response = requests.get(Base_URL + "competitions/PL/standings", headers=headers)
+print(response.status_code)
+
+data = response.json()
+standings = data["standings"][0]["table"]
+#define the standings table with the relevant columns and sort by points and goal difference
+df = pd.DataFrame([{
+    "Position": team["position"],
+    "Team": team["team"]["name"],
+    "Points": team["points"],
+    "Wins": team["won"],
+    "Draws": team["draw"],
+    "Losses": team["lost"],
+    "GF": team["goalsFor"],
+    "GA": team["goalsAgainst"],
+    "GD": team["goalsFor"] - team["goalsAgainst"]
+} for team in standings])
+df_sorted = df.sort_values(["Points", "GD"], ascending=[False, False])
+#print(df_sorted.to_string(index=False))
+
+#adding the top scorers to  table
+response2 = requests.get(Base_URL + "competitions/PL/scorers", headers=headers)
+scorers_data = response2.json()
+scorers = scorers_data["scorers"]
+
+df_scorers = pd.DataFrame([{
+    "Player": scorer["player"]["name"],
+    "Goals": scorer["goals"],
+    "Team": scorer["team"]["name"],
+    
+} for scorer in scorers])
+
+
+df_assisters = pd.DataFrame([{
+    "Player": scorer["player"]["name"],
+    "Assists": scorer["assists"],
+    "Team": scorer["team"]["name"],
+    
+} for scorer in scorers])
+
+
+
+print("=" * 50)
+print("PREMIER LEAGUE STANDINGS 2024/25")
+print("=" * 50)
+print(df_sorted.to_string(index=False))
+
+print("\n" + "=" * 50)
+print("TOP SCORERS 2024/25")
+print("=" * 50)
+print(df_scorers.to_string(index=False))
+print("\n--- TOP ASSISTERS ---")
+print(df_assisters.to_string(index=False))
+top10 = df_sorted.head(10)
+plt.figure(figsize=(12, 6))
+colors = []
+for pos in top10["Position"]:
+    if pos <= 5:
+        colors.append("blue")
+    elif pos <= 8:
+        colors.append("orange")
+    elif pos == 9:
+        colors.append("green")
+    else:
+        colors.append("red")
+
+plt.bar(top10["Team"], top10["Points"], color=colors)
+plt.title("Premier League Top 10 - Points 2024/25")
+plt.xlabel("Team")
+plt.ylabel("Points")
+plt.xticks(rotation=45, ha="right")
+plt.yticks(range(0, df_sorted["Points"].max() + 5, 5))
+plt.tight_layout()
+plt.figure(2)
+plt.bar(df_scorers["Player"], df_scorers["Goals"], color="green")
+plt.title("Top Scorers 2024/25")
+plt.xlabel("Player")
+plt.ylabel("Goals")
+plt.yticks(range(0, df_scorers["Goals"].max() + 5, 5))
+plt.xticks(rotation=45, ha="right")
+plt.tight_layout()
+plt.show()
